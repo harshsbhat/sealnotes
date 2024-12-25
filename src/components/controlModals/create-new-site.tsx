@@ -15,7 +15,6 @@ import { Client } from "@/app/[...slug]/client";
 import { saveNotes } from "@/app/actions/save";
 import { toast } from "@/hooks/use-toast";
 import { encrypt, sha256 } from "@/app/utils/vault";
-import { E } from "node_modules/@upstash/redis/zmscore-Dc6Llqgr.mjs";
 import { useRouter } from "next/navigation";
 
 interface CreateSiteProps {
