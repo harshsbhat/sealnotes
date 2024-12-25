@@ -40,7 +40,7 @@ export function DeleteSite({params, currentInitHash}: deletProps) {
         description: response.message,
         variant: "default",
       });
-      router.push("/")
+      router.replace("/");
     } catch (error) {
       console.error("Error deleting note:", error);
       toast({

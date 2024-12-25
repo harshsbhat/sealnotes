@@ -15,6 +15,8 @@ import { Client } from "@/app/[...slug]/client";
 import { saveNotes } from "@/app/actions/save";
 import { toast } from "@/hooks/use-toast";
 import { encrypt, sha256 } from "@/app/utils/vault";
+import { E } from "node_modules/@upstash/redis/zmscore-Dc6Llqgr.mjs";
+import { useRouter } from "next/navigation";
 
 interface CreateSiteProps {
   params: string;
@@ -26,6 +28,13 @@ export function CreateNewSite({ params }: CreateSiteProps) {
   const [passwordMatch, setPasswordMatch] = React.useState(true);
   const [siteCreated, setSiteCreated] = React.useState(false);
   const initHash = sha256("");
+  const router = useRouter(); 
+
+  // Handle cancel redirect
+  const handleCancel = () => {
+    router.replace("/"); // Redirect to home page
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,11 +119,9 @@ export function CreateNewSite({ params }: CreateSiteProps) {
               </div>
               <div className="mt-4 flex gap-2">
                 <Button type="submit">Create</Button>
-                <Link href="/">
-                  <Button type="button" variant="outline">
-                    Cancel
-                  </Button>
-                </Link>
+                <Button type="button" variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
               </div>
             </form>
           </CardContent>
