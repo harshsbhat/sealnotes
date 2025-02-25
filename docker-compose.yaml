@@ -5,7 +5,6 @@ services:
     restart: always
     ports:
       - '6379:6379'
-
   serverless-redis-http:
     ports:
       - '8079:80'

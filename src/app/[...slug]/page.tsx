@@ -21,8 +21,6 @@ export default async function NotepadPage({ params }: NotepadPageProps) {
   mergedSlug = sha256(mergedSlug);
   const siteExists = await redis.exists(mergedSlug);
   const data = await fetchData(mergedSlug, siteExists)
-
-
   return (
     <div>
       {siteExists ? (

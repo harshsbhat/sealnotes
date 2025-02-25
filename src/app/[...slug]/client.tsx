@@ -73,6 +73,7 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
   const tabsListRef = useRef<HTMLDivElement>(null);
   const [password, setPassword] = useState(hash)
   const [currentInitHash, setCurrentInitHash] = useState(sha256(decryptedData));
+  const [startDragged, setDragged] = useState(null);
 
   const initialTabs: TabsValues = (() => {
     try {
@@ -82,7 +83,7 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
       return [{ title: "New Note", description: decryptedData || "" }];
     }
   })();
-  
+
   const form = useForm<{ tabs: TabsValues }>({
     resolver: zodResolver(z.object({ tabs: tabsSchema })),
     defaultValues: { tabs: initialTabs },
@@ -124,7 +125,7 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
       setValue("tabs", refreshedTabs);
       setIsDirty(new Array(refreshedTabs.length).fill(false));
       setEditorContentKeys((prevKeys) => prevKeys.map((key) => key + 1));
-      
+
     } catch (error) {
       console.error("Refresh error:", error);
       toast({
@@ -198,31 +199,31 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
     const { toast } = useToast()
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
-    const [isSubmitting, setIsSubmitting] = useState(false) 
-  
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
     const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setNewPassword(e.target.value)
     }
-  
+
     const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setConfirmPassword(e.target.value)
     }
-  
+
     const isPasswordsMatch = newPassword === confirmPassword
     const isFormValid = newPassword && confirmPassword && isPasswordsMatch
-  
+
     const handleSubmit = async () => {
       if (!isFormValid) {
         return
       }
-  
-      setIsSubmitting(true) 
-  
+
+      setIsSubmitting(true)
+
       try {
         const currentHash = sha256(values)
         const encryptedNotes = encrypt(values, newPassword)
         const response = await saveNotes(params, encryptedNotes, currentInitHash, currentHash)
-        
+
         toast({
           title: "Success!",
           description: "Password has been successfully changed.",
@@ -238,10 +239,10 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
           variant: "destructive",
         })
       } finally {
-        setIsSubmitting(false) 
+        setIsSubmitting(false)
       }
     }
-  
+
     return (
       <Dialog>
         <DialogTrigger asChild>
@@ -269,10 +270,10 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
             />
           </div>
           <DialogFooter>
-            <LoadingBtn 
-              disabled={!isFormValid || isSubmitting} 
-              onClick={handleSubmit} 
-              loading={isSubmitting} 
+            <LoadingBtn
+              disabled={!isFormValid || isSubmitting}
+              onClick={handleSubmit}
+              loading={isSubmitting}
               className="w-full"
             >
               Save Changes
@@ -282,7 +283,7 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
       </Dialog>
     )
   }
-  
+
 
   function ButtonGroup() {
     return (
@@ -297,26 +298,42 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
           <Button variant="outline" className="w-full sm:w-auto" onClick={onRefresh}>
             Refresh
           </Button>
-          <ChangePassword params={params} values={JSON.stringify(getValues("tabs"))} currentInitHash={currentInitHash}/>
+          <ChangePassword params={params} values={JSON.stringify(getValues("tabs"))} currentInitHash={currentInitHash} />
           <LoadingBtn onClick={handleSubmit(onSubmit)} loading={isSubmitting} className="w-full sm:w-auto">
             Save
           </LoadingBtn>
-          <DeleteSite params={params} currentInitHash={currentInitHash}/>
+          <DeleteSite params={params} currentInitHash={currentInitHash} />
           <ModeToggle />
         </div>
       </div>
     );
   }
 
+  const handleDrop = (index: number) => {
+    const newArray = [...getValues("tabs")];
+    const [moveditem] = newArray.splice(activeTab, 1);
+    newArray.splice(index, 0, moveditem);
+    setValue("tabs", newArray, { shouldDirty: true });
+    setIsDirty((prev) => [...prev, false]);
+  };
+
+
+  // Handle dragging over an element (prevents default to allow dropping)
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+
+
+
   return (
     <div className="flex justify-center w-full h-[100vh]">
       <Form {...form}>
         <div className="space-y-6 p-4 w-full max-w-4xl">
           <ButtonGroup />
-          <Tabs 
-              value={activeTab.toString()} 
-              onValueChange={(value: string) => setActiveTab(parseInt(value))}
-            >
+          <Tabs
+            value={activeTab.toString()}
+            onValueChange={(value: string) => setActiveTab(parseInt(value))}
+          >
             <div className="relative flex items-center space-x-2">
               <Button
                 variant="ghost"
@@ -329,8 +346,10 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
               </Button>
               <div className="flex-grow overflow-hidden" ref={tabsListRef}>
                 <TabsList className="inline-flex w-max space-x-1 p-1">
-                  {getValues("tabs").map((tab, index) => (
-                    <TabsTrigger key={index} value={index.toString()} className="flex items-center whitespace-nowrap">
+                  {getValues("tabs")?.map((tab, index) => (
+
+                    <TabsTrigger
+                      onDragOver={handleDragOver} onDrop={() => handleDrop(index)} draggable key={index} value={index.toString()} className="flex items-center whitespace-nowrap">
                       <span className="truncate max-w-[100px]">{tab.title}</span>
                       <Button
                         variant="ghost"
