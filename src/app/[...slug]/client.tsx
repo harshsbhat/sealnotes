@@ -311,6 +311,9 @@ export function Client({ params, decryptedData, hash }: ClientProps) {
 
   const handleDrop = (index: number) => {
     const newArray = [...getValues("tabs")];
+    if(!activeTab && !index){
+      return;
+    }
     const [moveditem] = newArray.splice(activeTab, 1);
     newArray.splice(index, 0, moveditem);
     setValue("tabs", newArray, { shouldDirty: true });
